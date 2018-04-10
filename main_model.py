@@ -105,6 +105,7 @@ def update_compartment(cls, inlet, state):
 
         fluid_height = fluid_volume / (pitch * compartment_length)
         number_of_slice = int(ceil(fluid_height / slice_thickness))
+        print(number_of_slice)
         loc_slice_thickness = fluid_height / number_of_slice
         solid_per_slice = fluid_volume / number_of_slice * mixed_solid_fraction
         solid_weight_in_class = solid_per_slice * mixed_size
@@ -117,13 +118,13 @@ def update_compartment(cls, inlet, state):
             separate_size = (log(cls.sediment_radius / slice_radius) * 18 * liquid_viscosity /
                              (density_diff * hindered_factor * rad ** 2 * time_interval)) ** 0.5
             separate_size = max(separate_size)
-            # print('separation size: {}'.format(separate_size))
+            print('separation size: {}'.format(separate_size))
             for k in range(size_class):
                 if min_size + (k + 1 / 2) * size_interval >= separate_size:
                     sed_solid_weight_by_size[k] += solid_weight_in_class[k]
-
                 else:
                     remain_solid_weight_by_size[k] += solid_weight_in_class[k]
+
         sed_solid = np.sum(sed_solid_weight_by_size)
         sed_solid_size = sed_solid_weight_by_size / sed_solid
         remained_fluid = fluid_volume - outlet[0] - sed_solid / max_sed_frac
@@ -186,14 +187,9 @@ def bowl_section_calculation(state):
 
         for cp_ in range(1, number_of_compartment + 1):
             comp_calc = compartment_holder['comp_{}'.format(cp_)]
-            if cp_ == 1 or cp_ == number_of_compartment:
-                pass
-            else:
-                comp_calc_pre = compartment_holder['comp_{}'.format(cp_ - 1)]
-
-            comp_calc_next = compartment_holder['comp_{}'.format(cp_ + 1)]
             # calculating filling up process
             if state == 0:
+
                 if cp_ == number_of_compartment:
                     inlet_sed = 0
                     inlet_sed_frac = 0
@@ -204,7 +200,7 @@ def bowl_section_calculation(state):
 
                     update_compartment(comp_calc, inlet, state)
                 else:
-
+                    comp_calc_next = compartment_holder['comp_{}'.format(cp_ + 1)]
                     inlet_sed = comp_calc_next.sed_out
                     inlet_sed_frac = comp_calc_next.sed_out_frac
                     inlet_sed_size = comp_calc_next.sed_out_size
@@ -225,7 +221,7 @@ def bowl_section_calculation(state):
                     update_compartment(comp_calc, inlet, state)
 
                 elif cp_ == number_of_compartment:
-
+                    comp_calc_pre = compartment_holder['comp_{}'.format(cp_ - 1)]
                     inlet_fluid = comp_calc_pre.fluid_out
                     inlet_fluid_frac = comp_calc_pre.fluid_out_frac
                     inlet_fluid_size = comp_calc_pre.fluid_out_size
@@ -238,6 +234,8 @@ def bowl_section_calculation(state):
 
                     update_compartment(comp_calc, inlet, state)
                 else:
+                    comp_calc_pre = compartment_holder['comp_{}'.format(cp_ - 1)]
+                    comp_calc_next = compartment_holder['comp_{}'.format(cp_ + 1)]
                     inlet_fluid = comp_calc_pre.fluid_out
                     inlet_fluid_frac = comp_calc_pre.fluid_out_frac
                     inlet_fluid_size = comp_calc_pre.fluid_out_size
